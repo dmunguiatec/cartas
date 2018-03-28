@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <title>Cartas</title>
+        <link rel="stylesheet" href="example/example.css">
+        <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA////AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAREREREAAAABEREhEQAAAAEREiIRAAAAAREiIiEAAAABESIiIQAAAAEREhIRAAAAAREREREAAAABEREREQAAAAERIRERAAAAARIiEREAAAABIiIhEQAAAAEiIiERAAAAARISEREAAAABEREREQAAAAAAAAAAAADgDwAAwAcAAMAHAADABwAAwAcAAMAHAADABwAAwAcAAMAHAADABwAAwAcAAMAHAADABwAAwAcAAMAHAADgDwAA" rel="icon" type="image/x-icon" />
+    </head>
+    <body>
+        <script src="deck.min.js"></script>
+
+        <div id="container"></div>
+
+        <script>
+            let params = new URLSearchParams(window.location.search);
+            count = params.get('tirar');
+
+            var $container = document.getElementById('container');
+
+            // create Deck
+            var deck = Deck();
+
+            // add to DOM
+            deck.mount($container);
+
+            // remove
+            deck.cards.splice(13, 52).forEach(function (toRemove) {
+              toRemove.unmount();
+            });
+
+            deck.shuffle();
+
+            deck.cards.forEach(function (card) {
+              card.enableDragging();
+              card.setSide('front');
+            });
+
+            deck.cards.splice(0, count).forEach(function (card, i) {
+              let fontSize = 20;
+              card.animateTo({
+                delay: 1000 + i * 2, // wait 1 second + i * 2 ms
+                duration: 500,
+                ease: 'quartOut',
+                x: Math.round((i - (count / 2.25)) * 70 * fontSize / 16),
+                y: Math.round(-110 * fontSize / 16),
+              })
+            });
+
+        </script>
+    </body>
+</html>
