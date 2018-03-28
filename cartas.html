@@ -28,10 +28,12 @@
 
             deck.shuffle();
 
+/*
             deck.cards.forEach(function (card) {
               card.enableDragging();
               card.setSide('front');
             });
+*/
 
             deck.cards.splice(0, count).forEach(function (card, i) {
               let fontSize = 20;
@@ -41,7 +43,11 @@
                 ease: 'quartOut',
                 x: Math.round((i - (count / 2.25)) * 70 * fontSize / 16),
                 y: Math.round(-110 * fontSize / 16),
-              })
+              });
+
+              card.enableDragging();
+              card.setSide('front');
+
             });
 
         </script>
