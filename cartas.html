@@ -1,55 +1,288 @@
 <html>
     <head>
         <title>Cartas</title>
-        <link rel="stylesheet" href="example/example.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-grey.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA////AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAREREREAAAABEREhEQAAAAEREiIRAAAAAREiIiEAAAABESIiIQAAAAEREhIRAAAAAREREREAAAABEREREQAAAAERIRERAAAAARIiEREAAAABIiIhEQAAAAEiIiERAAAAARISEREAAAABEREREQAAAAAAAAAAAADgDwAAwAcAAMAHAADABwAAwAcAAMAHAADABwAAwAcAAMAHAADABwAAwAcAAMAHAADABwAAwAcAAMAHAADgDwAA" rel="icon" type="image/x-icon" />
+        <link rel="stylesheet" href="nav.css">
+        <link rel="stylesheet" href="https://deck-of-cards.js.org/example.css">
+        <script src="https://deck-of-cards.js.org/dist/deck.min.js"></script>
     </head>
-    <body>
-        <script src="deck.min.js"></script>
 
+    <body>
+
+      <a class="w3-button w3-xlarge" href="#" onclick="openNav()"><i class="fa fa-bars"></i></a>
+
+        <div id="mySidenav" class="sidenav">
+          <span class="closebtn" onclick="closeNav()">&times;</span>
+          <a href="javascript:void(0)" onclick="closeNav(); cleanUp(); init();">Tirar cartas</a>
+          <a href="javascript:void(0)" onclick="closeNav(); selection();">Selección</a>
+          <a href="javascript:void(0)" onclick="closeNav(); bubble();">Burbuja</a>
+          <a href="javascript:void(0)" onclick="closeNav(); insertion();">Inserción</a>
+          <div class="speedrangectl">
+            <span>Velocidad</span>
+            <input type="range" min="1" max="3" step="1" oninput="changeSpeed(value);"/>
+          </div>
+          <div class="cardcountctl">
+            <span>Cartas</span>
+            <input type="number" min="1" max="13" step="1" value="8" oninput="changeCardCount(value);"/>
+          </div>
+        </div>
+
+        <!-- Use any element to open the sidenav -->
         <div id="container"></div>
 
+        <script type="text/javascript">
+          /* Set the width of the side navigation to 250px */
+          function openNav() {
+            document.getElementById("mySidenav").style.width = "250px";
+          }
+
+          /* Set the width of the side navigation to 0 */
+          function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+          }
+        </script>
+
         <script>
+            const LOW_SPEED   = 1500;
+            const MED_SPEED   = 500;
+            const HI_SPEED    = 250;
+
+            let speedUnits   = 500;
+
+            let speed = MED_SPEED;
+            let step = 1;
+
             let params = new URLSearchParams(window.location.search);
-            count = params.get('tirar');
+            let count = 8;
 
             var $container = document.getElementById('container');
 
-            // create Deck
-            var deck = Deck();
+            let deck = {}, cards = [];
 
-            // add to DOM
-            deck.mount($container);
-
-            // remove
-            deck.cards.splice(13, 52).forEach(function (toRemove) {
-              toRemove.unmount();
-            });
-
-            deck.shuffle();
-
-/*
-            deck.cards.forEach(function (card) {
-              card.enableDragging();
-              card.setSide('front');
-            });
-*/
-
-            deck.cards.splice(0, count).forEach(function (card, i) {
-              let fontSize = 20;
-              card.animateTo({
-                delay: 1000 + i * 2, // wait 1 second + i * 2 ms
-                duration: 500,
-                ease: 'quartOut',
-                x: Math.round((i - (count / 2.25)) * 70 * fontSize / 16),
-                y: Math.round(-110 * fontSize / 16),
+            function init() {
+              step = 1;
+              deck = Deck();
+              deck.mount($container);
+              deck.cards.splice(13, 52).forEach(function (toRemove) {
+                toRemove.unmount();
               });
 
-              card.enableDragging();
-              card.setSide('front');
+              deck.shuffle();
+              cards = deck.cards.splice(0, count);
 
-            });
+              cards.forEach(function (card, i) {
+                let fontSize = 20;
 
+                let x = Math.round((i - (count / 2.25)) * 70 * fontSize / 16);
+                let y = Math.round(-110 * fontSize / 16);
+
+                card.animateTo({
+                  delay: speed + i * 2, // wait 1 second + i * speedUnits ms
+                  duration: 500,
+                  ease: 'quintInOut',
+                  x: x,
+                  y: y,
+                });
+
+                card.xp = x;
+                card.yp = y;
+
+                card.enableDragging();
+                card.setSide('front');
+              });
+
+              return {deck, cards};
+            }
+
+            function cleanUp() {
+              deck.unmount();
+            }
+
+            function changeSpeed(val) {
+              speedUnits = (val === "1") ? LOW_SPEED : (val === "2") ? MED_SPEED : (val === "3") ? HI_SPEED : speedUnits;
+            }
+
+            function changeCardCount(val) {
+              count = parseInt(val);
+            }
+
+            function movParams(x, y, cb) {
+              return {
+                delay: speed + step++ * speedUnits,
+                duration: 500,
+                ease: 'quintInOut',
+                x: x,
+                y: y,
+                onComplete: cb,
+              }
+            }
+
+            function showSelect(card, cb) {
+              card.animateTo(movParams(card.xp, card.yp - 30, cb));
+              card.yp = card.yp - 30;
+              card.selected = true;
+            }
+
+            function showDeselect(card, cb) {
+              card.animateTo(movParams(card.xp, card.yp + 30, cb));
+              card.yp = card.yp + 30;
+              card.selected = false;
+            }
+
+            function showSwap(cardI, cardJ, cb) {
+              const Bdest = {
+                xp: cardI.xp,
+                yp: cardI.selected ? cardI.yp + 30 : cardI.yp,
+              };
+
+              const Adest = {
+                xp: cardJ.xp,
+                yp: cardJ.selected ? cardJ.yp + 30 : cardJ.yp,
+              }
+
+              const offsetI = cardI.selected ? 90 : 120;
+              const offsetJ = cardJ.selected ? 90 : 120;
+
+              cardI.animateTo(movParams(cardI.xp, cardI.yp - offsetI, cb));
+              cardJ.animateTo(movParams(cardJ.xp, cardJ.yp - offsetJ, cb));
+              cardI.animateTo(movParams(Adest.xp, Adest.yp, cb));
+              cardJ.animateTo(movParams(Bdest.xp, Bdest.yp, cb));
+
+              cardI.xp = Adest.xp;
+              cardI.yp = Adest.yp;
+              cardJ.xp = Bdest.xp;
+              cardJ.yp = Bdest.yp;
+
+            }
+
+            function swap(A, i, j) {
+              const temp = A[i];
+              A[i] = A[j];
+              A[j] = temp;
+            }
+
+            function runops(ops) {
+              ops.forEach((op) => {
+                op.f.apply(this, op.args)
+              });
+            }
+
+            function selection() {
+              console.log('selection')
+              const ops = [];
+
+              for (let i = 0; i < cards.length - 1; i++) {
+                indMin = i;
+                ops.push({
+                  f: showSelect,
+                  args: [cards[indMin]]
+                })
+
+                for (let j = i + 1; j < cards.length; j++) {
+                  ops.push({
+                    f: showSelect,
+                    args: [cards[j]]
+                  })
+
+                  if (cards[j].rank < cards[indMin].rank) {
+                    ops.push({
+                      f: showDeselect,
+                      args: [cards[indMin]]
+                    });
+
+                    indMin = j;
+
+                  } else {
+                    ops.push({
+                      f: showDeselect,
+                      args: [cards[j]]
+                    });
+                  }
+                }
+
+                if (indMin != i) {
+                  ops.push({
+                    f: showSwap,
+                    args: [cards[i], cards[indMin]]
+                  });
+
+                  swap(cards, i, indMin);
+                } else {
+                  ops.push({
+                    f: showDeselect,
+                    args: [cards[indMin]]
+                  });
+                }
+              }
+
+              runops(ops);
+            }
+
+            function bubble() {
+              const ops = [];
+
+              for (let j = cards.length - 1; j > 0; j--) {
+                for (let i = 0; i < j; i++) {
+                  if (cards[i].rank > cards[i + 1].rank) {
+                    ops.push({
+                      f: showSwap,
+                      args: [cards[i], cards[i + 1]]
+                    });
+
+                    swap(cards, i, i + 1);
+
+                  } else {
+                    ops.push({
+                      f: showSelect,
+                      args: [cards[i]]
+                    });
+
+                    ops.push({
+                      f: showSelect,
+                      args: [cards[i + 1]]
+                    });
+
+                    ops.push({
+                      f: showDeselect,
+                      args: [cards[i]]
+                    });
+
+                    ops.push({
+                      f: showDeselect,
+                      args: [cards[i + 1]]
+                    });
+
+                  }
+                }
+              }
+
+              runops(ops);
+            }
+
+            function insertion() {
+              for (let i = 0; i < cards.length; i++) {
+                let j = i;
+                while (j > 0) {
+                  showSelect(cards[j]);
+                  showSelect(cards[j - 1]);
+                  if (cards[j - 1].rank > cards[j].rank) {
+                    showSwap(cards[j], cards[j - 1]);
+                    swap(cards, j, j - 1);
+                    didSwap = true;
+                  } else {
+                    showDeselect(cards[j]);
+                    showDeselect(cards[j - 1]);
+                  }
+                  j--;
+                }
+              }
+            }
+
+            init();
         </script>
     </body>
 </html>
