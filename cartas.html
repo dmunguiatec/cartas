@@ -21,6 +21,7 @@
           <a href="javascript:void(0)" onclick="closeNav(); selection();">Selección</a>
           <a href="javascript:void(0)" onclick="closeNav(); bubble();">Burbuja</a>
           <a href="javascript:void(0)" onclick="closeNav(); insertion();">Inserción</a>
+          <a href="javascript:void(0)" onclick="closeNav(); quicksort();">Quicksort</a>
           <div class="speedrangectl">
             <span>Velocidad</span>
             <input type="range" min="1" max="3" step="1" oninput="changeSpeed(value);"/>
@@ -122,18 +123,21 @@
             }
 
             function showSelect(card, cb) {
+              console.log(`showSelect(${card.rank})`);
               card.animateTo(movParams(card.xp, card.yp - 30, cb));
               card.yp = card.yp - 30;
               card.selected = true;
             }
 
             function showDeselect(card, cb) {
+              console.log(`showDeselect(${card.rank})`);
               card.animateTo(movParams(card.xp, card.yp + 30, cb));
               card.yp = card.yp + 30;
               card.selected = false;
             }
 
             function showSwap(cardI, cardJ, cb) {
+              console.log(`showSwap(${cardI.rank}, ${cardJ.rank})`);
               const Bdest = {
                 xp: cardI.xp,
                 yp: cardI.selected ? cardI.yp + 30 : cardI.yp,
@@ -280,6 +284,122 @@
                   j--;
                 }
               }
+            }
+
+            function quicksort() {
+              let ops = [];
+              let begin = 0;
+              let end = cards.length - 1;
+              quick(ops, begin, end);
+              runops(ops);
+            }
+            
+            function quick(ops, begin, end) {
+              if (end > begin) {
+                // ops.push({
+                //   f: showSelect,
+                //   args: [cards[begin]]
+                // });
+                // ops.push({
+                //   f: showSelect,
+                //   args: [cards[end]]
+                // });
+                // ops.push({
+                //   f: showDeselect,
+                //   args: [cards[begin]]
+                // });
+                // ops.push({
+                //   f: showDeselect,
+                //   args: [cards[end]]
+                // });
+
+                let pivot = partition(ops, begin, end);
+                quick(ops, begin, pivot - 1);
+                quick(ops, pivot + 1, end);
+              }
+            }
+
+            function partition(ops, begin, end) {
+              let pivot = end;
+              let highs = begin;
+
+              for (let i = begin; i < end; i++) {
+                ops.push({
+                  f: showSelect,
+                  args: [cards[i]]
+                });
+                ops.push({
+                  f: showSelect,
+                  args: [cards[pivot]]
+                });
+
+                if (cards[i].rank < cards[pivot].rank) {
+                  if (i != highs) {
+                    ops.push({
+                    f: showDeselect,
+                    args: [cards[pivot]]
+                    });
+                    ops.push({
+                      f: showSelect,
+                      args: [cards[highs]]
+                    });
+                    ops.push({
+                      f: showSwap,
+                      args: [cards[i], cards[highs]]
+                    });
+                  } else {
+                    ops.push({
+                      f: showDeselect,
+                      args: [cards[i]]
+                    });
+                    ops.push({
+                      f: showDeselect,
+                      args: [cards[pivot]]
+                    });
+                  }
+
+                  swap(cards, i, highs)
+                  
+                  highs++;
+
+                } else {
+                  ops.push({
+                    f: showDeselect,
+                    args: [cards[i]]
+                  });
+                  ops.push({
+                    f: showDeselect,
+                    args: [cards[pivot]]
+                  });
+                }
+              }
+
+              if (pivot != highs) {
+                ops.push({
+                  f: showSelect,
+                  args: [cards[pivot]]
+                });
+                ops.push({
+                  f: showSelect,
+                  args: [cards[highs]]
+                });
+                ops.push({
+                  f: showSwap,
+                  args: [cards[pivot], cards[highs]]
+                });
+              } else {
+                ops.push({
+                  f: showSelect,
+                  args: [cards[pivot]]
+                });
+                ops.push({
+                  f: showDeselect,
+                  args: [cards[pivot]]
+                });
+              }
+              swap(cards, pivot, highs);
+
+              return highs;
             }
 
             init();
