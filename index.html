@@ -17,7 +17,9 @@
 
         <div id="mySidenav" class="sidenav">
           <span class="closebtn" onclick="closeNav()">&times;</span>
-          <a href="javascript:void(0)" onclick="closeNav(); cleanUp(); init();">Tirar cartas</a>
+          <a href="javascript:void(0)" onclick="closeNav(); cleanUp(); init(ORDER_RANDOM);">Tirar cartas</a>
+          <a href="javascript:void(0)" onclick="closeNav(); cleanUp(); init(ORDER_ASC);">Ascendente</a>
+          <a href="javascript:void(0)" onclick="closeNav(); cleanUp(); init(ORDER_DESC);">Descendente</a>
           <a href="javascript:void(0)" onclick="closeNav(); selection();">Selección</a>
           <a href="javascript:void(0)" onclick="closeNav(); bubble();">Burbuja</a>
           <a href="javascript:void(0)" onclick="closeNav(); insertion();">Inserción</a>
@@ -52,6 +54,10 @@
             const MED_SPEED   = 500;
             const HI_SPEED    = 250;
 
+            const ORDER_RANDOM = 0;
+            const ORDER_DESC   = -1;
+            const ORDER_ASC    = 1;
+
             let speedUnits   = 500;
 
             let speed = MED_SPEED;
@@ -64,7 +70,7 @@
 
             let deck = {}, cards = [];
 
-            function init() {
+            function init(order = ORDER_RANDOM) {
               step = 1;
               deck = Deck();
               deck.mount($container);
@@ -72,7 +78,13 @@
                 toRemove.unmount();
               });
 
-              deck.shuffle();
+              if (order === ORDER_ASC) {
+                deck.sort(true);
+              } else if (order === ORDER_DESC) {
+                deck.sort();
+              } else {
+                deck.shuffle();
+              }
               cards = deck.cards.splice(0, count);
 
               cards.forEach(function (card, i) {
@@ -269,17 +281,17 @@
 
             function insertion() {
               for (let i = 0; i < cards.length; i++) {
+                showSelect(cards[i]);
+                showDeselect(cards[i]);
+
                 let j = i;
                 while (j > 0) {
-                  showSelect(cards[j]);
-                  showSelect(cards[j - 1]);
                   if (cards[j - 1].rank > cards[j].rank) {
+                    showSelect(cards[j]);
+                    showSelect(cards[j - 1]);
                     showSwap(cards[j], cards[j - 1]);
                     swap(cards, j, j - 1);
                     didSwap = true;
-                  } else {
-                    showDeselect(cards[j]);
-                    showDeselect(cards[j - 1]);
                   }
                   j--;
                 }
@@ -296,23 +308,6 @@
             
             function quick(ops, begin, end) {
               if (end > begin) {
-                // ops.push({
-                //   f: showSelect,
-                //   args: [cards[begin]]
-                // });
-                // ops.push({
-                //   f: showSelect,
-                //   args: [cards[end]]
-                // });
-                // ops.push({
-                //   f: showDeselect,
-                //   args: [cards[begin]]
-                // });
-                // ops.push({
-                //   f: showDeselect,
-                //   args: [cards[end]]
-                // });
-
                 let pivot = partition(ops, begin, end);
                 quick(ops, begin, pivot - 1);
                 quick(ops, pivot + 1, end);
